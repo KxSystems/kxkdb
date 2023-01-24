@@ -1,19 +1,8 @@
-//! As Rust is becoming a popular programming language for its performance and type safety, the desire to use
-//!  it with still a maniac time-series database kdb+ is brewing. The aspiration is understandable since we know
-//!  kdb+ is fast and its interface or a shared library should be fast as well. This interface was created to
-//!  satisfy such a natural demand, furthermore, in a manner users do not feel any pain to use. The notrious
-//!  ethoteric function names of the q/kdb+ C API is not an interest of Rust developers.
-//!
-//! *"Give us a **Rust** interface!!"*
-//!
-//! Here is your choice.
-//!
-//! This interface provides two features:
-//!
-//! - IPC interface (Rust client of q/kdb+ process)
-//! - API (build a shared library for q/kdb+)
-//!
-//! You can find detail descriptions of each feature under corresponding module page.
+//! # kxkdb
+//! 
+//! The interface comprises two features:
+//! - IPC: Connecting Rust and kdb+ processes via IPC
+//! - API: Embedding Rust code inside kdb+ processes
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++//
 // >> Global Variables
@@ -157,8 +146,8 @@ pub mod qnull_base {
     /// Null value of GUID.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn guid_border(_: K) -> K{
@@ -175,8 +164,8 @@ pub mod qnull_base {
     /// Null value of short.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn short_borders(_: K) -> K{
@@ -198,8 +187,8 @@ pub mod qnull_base {
     /// Null value of int family, i.e., int, month, date, minute, second and time.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn int_borders(_: K) -> K{
@@ -221,8 +210,8 @@ pub mod qnull_base {
     /// Null value of long family, i.e., long, timestamp and timespan.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn long_borders(_: K) -> K{
@@ -244,8 +233,8 @@ pub mod qnull_base {
     /// Null value of real.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn real_borders(_: K) -> K{
@@ -267,8 +256,8 @@ pub mod qnull_base {
     /// Null value of float family, i.e., float and datetime.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn float_borders(_: K) -> K{
@@ -290,8 +279,8 @@ pub mod qnull_base {
     /// Null value of char.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn char_border(_: K) -> K{
@@ -310,8 +299,8 @@ pub mod qnull_base {
     /// Null value of string family (symbol, string).
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn string_borders(_: K) -> K{

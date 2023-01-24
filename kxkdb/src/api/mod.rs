@@ -1,82 +1,158 @@
-//! This `api` module provides API mirroring the C API of q/kdb+. The expected usage is to build a shared library for q/kdb+ in Rust.
-//!
-//! In order to avoid writing too large `unsafe` block leading to poor optimization, most of native C API functions were provided
-//!  with a wrapper funtion with a bit of ergonomic safety and with intuitive implementation as a trait method. The only exceptions
-//!  are:
-//! - `knk`
-//! - `k`
-//! These functions are using elipsis (`...`) as its argument and cannot be provided with a stable distribution. When you need to use
-//!  either of them you can find them under `native` namespace together with the other naked C API functions.
-//!
-//! *Notes:*
-//!
-//! - This library is for kdb+ version >= 3.0.
-//! - Meangless C macros are excluded but accessors of an underlying array like `kC`, `kJ`, `kK` etc. are provided in Rust way.
-//!
-//! ## Examples
-//!
-//! In order to encourage to use Rust style API, examples of the C API style is not provided here (you can see them in [README of the repository](https://github.com/diamondrod/kdbplus)).
-//!  The examples below are written without `unsafe` code. You can see how comfortably breathing are the wrapped functions in the code.
-//!
-//! ```no_run
-//! #[macro_use]
-//! extern crate kdbplus;
-//! use kdbplus::api::*;
-//! use kdbplus::qtype;
-//!
+//! ## API
+//! 
+//! The API feature enables the development of shared object libraries in Rust, which can be [dynamically loaded](https://code.kx.com/q/ref/dynamic-load/) into kdb+.
+//! 
+//! In order to avoid large `unsafe` blocks, most native C API functions are provided with a wrapper funtion and with intuitive implementation as a trait method. The exceptions are variadic functions `knk` and `k`, which are provided under `native` namespace with the other C API functions.
+//! 
+//! ### Installation
+//! 
+//! Add `kxkdb` as a dependency, with feature `api`.
+//! 
+//! ```toml
+//! [dependencies]
+//! kxkdb={version="0.0", features=["api"]}
+//! ```
+//! 
+//! ### Examples
+//! 
+//! #### C API Style
+//! 
+//! ```rust
+//! use kxkdb::qtype;
+//! use kxkdb::api::*;
+//! use kxkdb::api::native::*;
+//! 
 //! #[no_mangle]
-//! pub extern "C" fn create_symbol_list2(_: K) -> K{
-//!   let mut list=new_list(qtype::SYMBOL_LIST, 0);
-//!   list.push_symbol("Abraham").unwrap();
-//!   list.push_symbol("Isaac").unwrap();
-//!   list.push_symbol("Jacob").unwrap();
-//!   list.push_symbol_n("Josephine", 6).unwrap();
-//!   list
+//! pub extern "C" fn create_symbol_list(_: K) -> K {
+//!     unsafe{
+//!         let mut list=ktn(qtype::SYMBOL_LIST as i32, 0);
+//!         js(&mut list, ss(str_to_S!("Abraham")));
+//!         js(&mut list, ss(str_to_S!("Isaac")));
+//!         js(&mut list, ss(str_to_S!("Jacob")));
+//!         js(&mut list, sn(str_to_S!("Josephine"), 6));
+//!         list
+//!     }
 //! }
-//!
+//! 
 //! #[no_mangle]
-//! fn no_panick(func: K, args: K) -> K{
-//!   let result=error_to_string(apply(func, args));
-//!   if let Ok(error) = result.get_error_string(){
-//!     println!("FYI: {}", error);
-//!     // Decrement reference count of the error object which is no longer used.
-//!     decrement_reference_count(result);
-//!     KNULL
-//!   }
-//!   else{
-//!     println!("success!");
-//!     result
-//!   }
+//! pub extern "C" fn catchy(func: K, args: K) -> K {
+//!     unsafe{
+//!         let result=ee(dot(func, args));
+//!         if (*result).qtype == qtype::ERROR{
+//!             println!("error: {}", S_to_str((*result).value.symbol));
+//!             // Decrement reference count of the error object
+//!             r0(result);
+//!             KNULL
+//!         } else {
+//!             result
+//!         }
+//!     }
 //! }
-//!
+//! 
 //! #[no_mangle]
-//! pub extern "C" fn create_table2(_: K) -> K{
-//!   // Build keys
-//!   let keys=new_list(qtype::SYMBOL_LIST, 2);
-//!   let keys_slice=keys.as_mut_slice::<S>();
-//!   keys_slice[0]=enumerate(str_to_S!("time"));
-//!   keys_slice[1]=enumerate_n(str_to_S!("temperature_and_humidity"), 11);
-//!
-//!   // Build values
-//!   let values=new_list(qtype::COMPOUND_LIST, 2);
-//!   let time=new_list(qtype::TIMESTAMP_LIST, 3);
-//!   // 2003.10.10D02:24:19.167018272 2006.05.24D06:16:49.419710368 2008.08.12D23:12:24.018691392
-//!   time.as_mut_slice::<J>().copy_from_slice(&[119067859167018272_i64, 201766609419710368, 271897944018691392]);
-//!   let temperature=new_list(qtype::FLOAT_LIST, 3);
-//!   temperature.as_mut_slice::<F>().copy_from_slice(&[22.1_f64, 24.7, 30.5]);
-//!   values.as_mut_slice::<K>().copy_from_slice(&[time, temperature]);
-//!   
-//!   flip(new_dictionary(keys, values))
+//! pub extern "C" fn dictionary_list_to_table() -> K {
+//!     unsafe{
+//!         let dicts = knk(3);
+//!         let dicts_slice = dicts.as_mut_slice::<K>();
+//!         for i in 0..3 {
+//!             let keys = ktn(qtype::SYMBOL_LIST as i32, 2);
+//!             let keys_slice = keys.as_mut_slice::<S>();
+//!             keys_slice[0] = ss(str_to_S!("a"));
+//!             keys_slice[1] = ss(str_to_S!("b"));
+//!             let values = ktn(qtype::INT_LIST as i32, 2);
+//!             values.as_mut_slice::<I>()[0..2].copy_from_slice(&[i*10, i*100]);
+//!             dicts_slice[i as usize] = xD(keys, values);
+//!         }
+//!         // Format list of dictionary as a table.
+//!         // ([] a: 0 10 20i; b: 0 100 200i)
+//!         k(0, str_to_S!("{[dicts] -1 _ dicts, (::)}"), dicts, KNULL)
+//!     }
 //! }
 //! ```
-//!
-//! And q code is here:
-//!
+//! 
+//! A kdb+ process can then dynamically load and call these functions as follows:
+//! 
 //! ```q
-//! q)summon:`libapi_examples 2: (`create_symbol_list2; 1)
+//! q)summon:`libc_api_examples 2: (`create_symbol_list; 1)
 //! q)summon[]
 //! `Abraham`Isaac`Jacob`Joseph
-//! q)chill: `libapi_examples 2: (`no_panick; 2);
+//! q)`Abraham`Isaac`Jacob`Joseph ~ summon[]
+//! q)catchy: `libc_api_examples 2: (`catchy; 2);
+//! q)catchy[$; ("J"; "42")]
+//! 42
+//! q)catchy[+; (1; `a)]
+//! error: type
+//! q)behold: `libc_api_examples 2: (`dictionary_list_to_table; 1);
+//! q)behold[]
+//! a  b
+//! ------
+//! 0  0
+//! 10 100
+//! 20 200
+//! ```
+//! 
+//! #### Rust Style
+//! 
+//! The examples below are written without `unsafe` code.
+//! 
+//! ```rust
+//! use kxkdb::qtype;
+//! use kxkdb::api::*;
+//! use kxkdb::api::native::*;
+//! 
+//! #[no_mangle]
+//! pub extern "C" fn create_symbol_list2(_: K) -> K {
+//!     let mut list = new_list(qtype::SYMBOL_LIST, 0);
+//!     list.push_symbol("Abraham").unwrap();
+//!     list.push_symbol("Isaac").unwrap();
+//!     list.push_symbol("Jacob").unwrap();
+//!     list.push_symbol_n("Josephine", 6).unwrap();
+//!     list
+//! }
+//! 
+//! #[no_mangle]
+//! fn no_panick(func: K, args: K) -> K {
+//!     let result = error_to_string(apply(func, args));
+//!     if let Ok(error) = result.get_error_string() {
+//!         println!("FYI: {}", error);
+//!         // Decrement reference count of the error object which is no longer used.
+//!         decrement_reference_count(result);
+//!         KNULL
+//!     }
+//!     else{
+//!         println!("success!");
+//!         result
+//!     }
+//! }
+//! 
+//! #[no_mangle]
+//! pub extern "C" fn create_table2(_: K) -> K {
+//!     // Build keys
+//!     let keys = new_list(qtype::SYMBOL_LIST, 2);
+//!     let keys_slice = keys.as_mut_slice::<S>();
+//!     keys_slice[0] = enumerate(str_to_S!("time"));
+//!     keys_slice[1] = enumerate_n(str_to_S!("temperature_and_humidity"), 11);
+//! 
+//!     // Build values
+//!     let values = new_list(qtype::COMPOUND_LIST, 2);
+//!     let time = new_list(qtype::TIMESTAMP_LIST, 3);
+//!     // 2003.10.10D02:24:19.167018272 2006.05.24D06:16:49.419710368 2008.08.12D23:12:24.018691392
+//!     time.as_mut_slice::<J>().copy_from_slice(&[119067859167018272_i64, 201766609419710368, 271897944018691392]);
+//!     let temperature = new_list(qtype::FLOAT_LIST, 3);
+//!     temperature.as_mut_slice::<F>().copy_from_slice(&[22.1_f64, 24.7, 30.5]);
+//!     values.as_mut_slice::<K>().copy_from_slice(&[time, temperature]);
+//! 
+//!     flip(new_dictionary(keys, values))
+//! }
+//! ```
+//! 
+//! And q code is here:
+//! 
+//! ```q
+//! q)summon:`libc_api_examples 2: (`create_symbol_list2; 1)
+//! q)summon[]
+//! `Abraham`Isaac`Jacob`Joseph
+//! q)chill: `libc_api_examples 2: (`no_panick; 2);
 //! q)chill[$; ("J"; "42")]
 //! success!
 //! 42
@@ -86,10 +162,11 @@
 //! q)climate_change[]
 //! time                          temperature
 //! -----------------------------------------
-//! 2003.10.10D02:24:19.167018272 22.1       
-//! 2006.05.24D06:16:49.419710368 24.7       
-//! 2008.08.12D23:12:24.018691392 30.5  
+//! 2003.10.10D02:24:19.167018272 22.1
+//! 2006.05.24D06:16:49.419710368 24.7
+//! 2008.08.12D23:12:24.018691392 30.5
 //! ```
+//! 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++//
 // >> Settings
@@ -120,7 +197,7 @@ pub mod native;
 ///  and returns `K`. This null pointer is interpreted as a general null value (`::`) whose type is `101h`.
 /// # Example
 /// ```
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn vanity(_: K) -> K{
@@ -144,7 +221,7 @@ pub const KNULL: K = 0 as K;
 /// # Example
 /// ```no_run
 /// #[macro_use]
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn pingpong(_: K) -> K{
@@ -287,7 +364,7 @@ pub trait KUtility {
     /// - `K`: Equivalent to C API macro `kK`.
     /// # Example
     /// ```
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn modify_long_list_a_bit(long_list: K) -> K{
@@ -318,7 +395,7 @@ pub trait KUtility {
     /// Get an underlying q byte.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_bool(atom: K) -> K{
@@ -341,7 +418,7 @@ pub trait KUtility {
     /// Get an underlying q byte.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_guid(atom: K) -> K{
@@ -366,7 +443,7 @@ pub trait KUtility {
     /// Get an underlying q byte.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_byte(atom: K) -> K{
@@ -389,7 +466,7 @@ pub trait KUtility {
     /// Get an underlying q short.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_short(atom: K) -> K{
@@ -412,7 +489,7 @@ pub trait KUtility {
     /// Get an underlying q int.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_int(atom: K) -> K{
@@ -435,7 +512,7 @@ pub trait KUtility {
     /// Get an underlying q long.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_long(atom: K) -> K{
@@ -458,7 +535,7 @@ pub trait KUtility {
     /// Get an underlying q real.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_real(atom: K) -> K{
@@ -481,7 +558,7 @@ pub trait KUtility {
     /// Get an underlying q float.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_float(atom: K) -> K{
@@ -504,7 +581,7 @@ pub trait KUtility {
     /// Get an underlying q char.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_char(atom: K) -> K{
@@ -527,7 +604,7 @@ pub trait KUtility {
     /// Get an underlying q symbol.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_symbol2(atom: K) -> K{
@@ -550,7 +627,7 @@ pub trait KUtility {
     /// Get an underlying q string as `&str`.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_string(string: K) -> K{
@@ -573,7 +650,7 @@ pub trait KUtility {
     /// Get an underlying q string as `String`.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_string2(string: K) -> K{
@@ -596,7 +673,7 @@ pub trait KUtility {
     /// Get a flipped underlying q table as `K` (dictionary).
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn hidden_key(table: K) -> K{
@@ -627,8 +704,8 @@ pub trait KUtility {
     ///  to which symbol values are cast must be passed. In the example below, it is assumed that
     ///  there is a single enum column in a table and the column values are cast to a symbol list whose name is `sym`.
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::qtype;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn print_row(object: K, index: K) -> K{
@@ -660,8 +737,8 @@ pub trait KUtility {
     /// Get an attribute of a q object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::qattribute;
+    /// use kxkdb::api::*;
+    /// use kxkdb::qattribute;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn murmur(list: K) -> K{
@@ -684,7 +761,7 @@ pub trait KUtility {
     /// Append a q list object to a q list.
     ///  Returns a pointer to the (potentially reallocated) `K` object.
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn concat_list2(mut list1: K, list2: K) -> K{
@@ -720,8 +797,8 @@ pub trait KUtility {
     ///  Returns a pointer to the (potentially reallocated) `K` object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::qtype;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_compound_list(int: K) -> K{
@@ -753,8 +830,8 @@ pub trait KUtility {
     /// Add a raw value to a q simple list and returns a pointer to the (potentially reallocated) `K` object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::qtype;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_simple_list2(_: K) -> K{
@@ -780,8 +857,8 @@ pub trait KUtility {
     ///  Returns a pointer to the (potentially reallocated) `K` object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::qtype;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_symbol_list2(_: K) -> K{
@@ -821,7 +898,7 @@ pub trait KUtility {
     /// - general null: 1
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn numbers(obj: K) -> K{
@@ -853,8 +930,8 @@ pub trait KUtility {
     /// Set an attribute to q list object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::qattribute;
-    /// use kdbplus::api::*;
+    /// use kxkdb::qattribute;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn labeling(mut list: K) -> K{
@@ -884,7 +961,7 @@ pub trait KUtility {
     /// - 3: unenumerate, compress, allow serialization of timespan and timestamp
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn encrypt(object: K)->K{
@@ -905,7 +982,7 @@ pub trait KUtility {
     /// Deserialize a bytes into q object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
+    /// use kxkdb::api::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn decrypt(bytes: K)->K{
@@ -1359,8 +1436,8 @@ impl k0 {
 /// Convert `S` to `&str`. This function is intended to convert symbol type (null-terminated char-array) to `str`.
 /// # Extern
 /// ```no_run
-/// use kdbplus::*;
-/// use kdbplus::api::*;
+/// use kxkdb::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn print_symbol(symbol: K) -> K{
@@ -1387,7 +1464,7 @@ pub fn S_to_str<'a>(cstring: S) -> &'a str {
 /// Convert null-terminated `&str` to `S`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn pingpong2(_: K) -> K{
@@ -1409,9 +1486,9 @@ pub fn null_terminated_str_to_S(string: &str) -> S {
 ///  a q error object with `krr`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
-/// use kdbplus::api::native::*;
-/// use kdbplus::qtype;
+/// use kxkdb::api::*;
+/// use kxkdb::api::native::*;
+/// use kxkdb::qtype;
 ///
 /// pub extern "C" fn must_be_int2(obj: K) -> K{
 ///   unsafe{
@@ -1447,7 +1524,7 @@ pub fn null_terminated_str_to_const_S(string: &str) -> const_S {
 /// Constructor of q bool object. Relabeling of `kb`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_bool(_: K) -> K{
@@ -1467,7 +1544,7 @@ pub fn new_bool(boolean: I) -> K {
 /// Constructor of q GUID object. Relabeling of `ku`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_guid(_: K) -> K{
@@ -1487,7 +1564,7 @@ pub fn new_guid(guid: [G; 16]) -> K {
 /// Constructor of q byte object. Relabeling of `kg`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_byte(_: K) -> K{
@@ -1507,7 +1584,7 @@ pub fn new_byte(byte: I) -> K {
 /// Constructor of q short object. Relabeling of `kh`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_short(_: K) -> K{
@@ -1527,7 +1604,7 @@ pub fn new_short(short: I) -> K {
 /// Constructor of q int object. Relabeling of `ki`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_int(_: K) -> K{
@@ -1547,7 +1624,7 @@ pub fn new_int(int: I) -> K {
 /// Constructor of q long object. Relabeling of `kj`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_long(_: K) -> K{
@@ -1567,7 +1644,7 @@ pub fn new_long(long: J) -> K {
 /// Constructor of q real object. Relabeling of `ke`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_real(_: K) -> K{
@@ -1587,7 +1664,7 @@ pub fn new_real(real: F) -> K {
 /// Constructor of q float object. Relabeling of `kf`.
 /// # Example
 /// ```
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_float(_: K) -> K{
@@ -1607,7 +1684,7 @@ pub fn new_float(float: F) -> K {
 ///  Constructor of q char object. Relabeling of `kc`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_char2(_: K) -> K{
@@ -1627,7 +1704,7 @@ pub fn new_char(character: char) -> K {
 /// Constructor of q symbol object. Relabeling of `ks`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_symbol2(_: K) -> K{
@@ -1648,7 +1725,7 @@ pub fn new_symbol(symbol: &str) -> K {
 
 /// Constructor of q timestamp from elapsed time in nanoseconds since kdb+ epoch (`2000.01.01`). Relabeling of `ktj`.
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_timestamp2(_: K) -> K{
@@ -1670,7 +1747,7 @@ pub fn new_timestamp(nanoseconds: J) -> K {
 ///  This is a complememtal constructor of missing month type.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_month(_: K) -> K{
@@ -1695,7 +1772,7 @@ pub fn new_month(months: I) -> K {
 /// Constructor of q date object. Relabeling of `kd`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_date(_: K) -> K{
@@ -1715,7 +1792,7 @@ pub fn new_date(days: I) -> K {
 
 /// Constructor of q datetime object from the number of days since kdb+ epoch (`2000.01.01`). Relabeling of `kz`.
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_datetime(_: K) -> K{
@@ -1735,7 +1812,7 @@ pub fn new_datetime(days: F) -> K {
 
 /// Constructor of q timespan object from nanoseconds. Relabeling of `ktj`.
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_timespan2(_: K) -> K{
@@ -1757,7 +1834,7 @@ pub fn new_timespan(nanoseconds: J) -> K {
 ///  missing minute type.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_minute(_: K) -> K{
@@ -1783,7 +1860,7 @@ pub fn new_minute(minutes: I) -> K {
 ///  missing second type.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_second(_: K) -> K{
@@ -1808,7 +1885,7 @@ pub fn new_second(seconds: I) -> K {
 /// Constructor of q time object. Relabeling of `kt`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_time(_: K) -> K{
@@ -1830,7 +1907,7 @@ pub fn new_time(milliseconds: I) -> K {
 ///  missing second type.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_enum(source: K, index: K) -> K{
@@ -1901,7 +1978,7 @@ pub fn new_list(qtype: i8, length: J) -> K {
 /// Constructor of q string object.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_string(_: K) -> K{
@@ -1921,7 +1998,7 @@ pub fn new_string(string: &str) -> K {
 /// Constructor if q string object with a fixed length.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_string2(_: K) -> K{
@@ -1941,8 +2018,8 @@ pub fn new_string_n(string: &str, length: J) -> K {
 /// Constructor of q dictionary object.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_dictionary() -> K{
@@ -1971,8 +2048,8 @@ pub fn new_dictionary(keys: K, values: K) -> K {
 /// Constructor of q general null.
 /// # Example
 /// ```no_run
-/// use kdbplus::qtype;
-/// use kdbplus::api::*;
+/// use kxkdb::qtype;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn nullify(_: K) -> K{
@@ -2003,7 +2080,7 @@ pub fn new_null() -> K {
 /// Constructor of q error. The input must be null-terminated.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// pub extern "C" fn thai_kick(_: K) -> K{
 ///   new_error("Thai kick unconditionally!!\0")
@@ -2031,8 +2108,8 @@ pub fn new_error_os(message: &str) -> K {
 /// Convert an error object into usual `K` object which has the error string in the field `symbol`.
 /// # Example
 /// ```no_run
-/// use kdbplus::*;
-/// use kdbplus::api::*;
+/// use kxkdb::*;
+/// use kxkdb::api::*;
 ///
 /// extern "C" fn no_panick(func: K, args: K) -> K{
 ///   let result=error_to_string(apply(func, args));
@@ -2076,8 +2153,8 @@ pub fn error_to_string(error: K) -> K {
 ///  `qtype::ERROR` (This means false positive of the `KNULL` case can be eliminated).
 /// # Examples
 /// ```no_run
-/// use kdbplus::*;
-/// use kdbplus::api::*;
+/// use kxkdb::*;
+/// use kxkdb::api::*;
 ///
 /// fn love_even(arg: K) -> K{
 ///   if let Ok(int) = arg.get_int(){
@@ -2174,9 +2251,9 @@ pub fn enumerate(string: S) -> S {
 ///  lists as its elements.
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_table2(_: K) -> K{
@@ -2219,9 +2296,9 @@ pub fn flip(dictionary: K) -> K {
 /// # Example
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_table2(_: K) -> K{
@@ -2277,9 +2354,9 @@ pub fn unkey(keyed_table: K) -> K {
 /// # Example
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn create_table2(_: K) -> K{
@@ -2330,7 +2407,7 @@ pub fn enkey(table: K, n: J) -> K {
 ///  q side. See details on [the reference page](https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting).
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn agriculture(_: K)->K{
@@ -2359,8 +2436,8 @@ pub fn decrement_reference_count(qobject: K) -> V {
 /// # Example
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
 ///
 /// fn eat(apple: K){
 ///   println!("おいしい！");
@@ -2423,9 +2500,9 @@ pub fn destroy_socket_if(socket: I, condition: bool) {
 /// Register callback to the associated kdb+ socket.
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// static mut PIPE:[I; 2]=[-1, -1];
 ///
@@ -2527,9 +2604,9 @@ pub fn drop_q_object(obj: K) -> K {
 /// # Example
 /// ```no_run
 /// #[macro_use]
-/// extern crate kdbplus;
-/// use kdbplus::api::*;
-/// use kdbplus::qtype;
+/// extern crate kxkdb;
+/// use kxkdb::api::*;
+/// use kxkdb::qtype;
 ///
 /// #[derive(Clone, Debug)]
 /// struct Planet{
@@ -2610,7 +2687,7 @@ pub fn load_as_q_function(func: *const V, n: J) -> K {
 /// Convert ymd to the number of days from `2000.01.01`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// fn main(){
 ///
@@ -2627,7 +2704,7 @@ pub fn ymd_to_days(year: I, month: I, date: I) -> I {
 /// Convert the number of days from `2000.01.01` to a number expressed as `yyyymmdd`.
 /// # Example
 /// ```no_run
-/// use kdbplus::api::*;
+/// use kxkdb::api::*;
 ///
 /// fn main(){
 ///
@@ -2645,8 +2722,8 @@ pub fn days_to_ymd(days: I) -> I {
 ///  with a different type of list.
 /// # Example
 /// ```no_run
-/// use kdbplus::*;
-/// use kdbplus::api::*;
+/// use kxkdb::*;
+/// use kxkdb::api::*;
 ///
 /// #[no_mangle]
 /// pub extern "C" fn drift(_: K)->K{

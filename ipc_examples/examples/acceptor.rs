@@ -2,7 +2,7 @@
 //! # Note
 //! A file path to a credential file must be set on `KDBPLUS_ACCOUNT_FILE`. See the README or the module document for the detail of the file format.
 
-use kdbplus::ipc::*;
+use kxkdb::ipc::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {

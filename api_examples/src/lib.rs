@@ -1,4 +1,4 @@
-//! This module is provided as examples of "api" feature of `kdbplus` crate. The functions defined here will be
+//! This module is provided as examples of "api" feature of `kxkdb` crate. The functions defined here will be
 //!  used for simple tests.
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -6,11 +6,11 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 #[macro_use]
-extern crate kdbplus;
+extern crate kxkdb;
 
-use kdbplus::api::native::*;
-use kdbplus::api::*;
-use kdbplus::{qattribute, qinf_base, qninf_base, qnull_base, qtype};
+use kxkdb::api::native::*;
+use kxkdb::api::*;
+use kxkdb::{qattribute, qinf_base, qninf_base, qnull_base, qtype};
 use libc::{pipe, send};
 use std::ffi::c_void;
 

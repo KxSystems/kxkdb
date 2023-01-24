@@ -1,2 +1,2 @@
 [workspace]
-members=["kdbplus", "api_examples", "ipc_examples"]
+members=["kxkdb", "api_examples", "ipc_examples"]

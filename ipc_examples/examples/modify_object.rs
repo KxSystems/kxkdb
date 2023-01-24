@@ -1,6 +1,6 @@
 use chrono::prelude::*;
-use kdbplus::ipc::*;
-use kdbplus::qattribute;
+use kxkdb::ipc::*;
+use kxkdb::qattribute;
 
 fn main() {
     let mut string = K::new_string(String::from("something"), qattribute::NONE);

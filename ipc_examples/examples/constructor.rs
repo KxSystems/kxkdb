@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use chrono::Duration;
-use kdbplus::ipc::*;
-use kdbplus::qattribute;
+use kxkdb::ipc::*;
+use kxkdb::qattribute;
 
 fn main() {
     let boolean = K::new_bool(true);
@@ -35,7 +35,7 @@ fn main() {
     println!("timespan list: {}", timespan_list);
 
     let short_list = K::new_short_list(vec![12_i16, -7, 1440], qattribute::NONE);
-    let string = K::new_string("kdbplus".to_string(), qattribute::UNIQUE);
+    let string = K::new_string("kxkdb".to_string(), qattribute::UNIQUE);
     let symbol_list = K::new_symbol_list(
         vec![String::from("David"), String::from("Solomon")],
         qattribute::NONE,

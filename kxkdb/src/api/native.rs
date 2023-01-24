@@ -25,8 +25,8 @@ extern "C" {
     /// Constructor of q bool object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_bool(_: K) -> K{
@@ -43,8 +43,8 @@ extern "C" {
     /// Constructor of q GUID object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_guid(_: K) -> K{
@@ -61,8 +61,8 @@ extern "C" {
     /// Constructor of q byte object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_byte(_: K) -> K{
@@ -79,8 +79,8 @@ extern "C" {
     /// Constructor of q short object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_short(_: K) -> K{
@@ -97,8 +97,8 @@ extern "C" {
     /// Constructor of q int object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_int(_: K) -> K{
@@ -115,8 +115,8 @@ extern "C" {
     /// Constructor of q long object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_long(_: K) -> K{
@@ -133,8 +133,8 @@ extern "C" {
     /// Constructor of q real object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_real(_: K) -> K{
@@ -151,8 +151,8 @@ extern "C" {
     /// Constructor of q float object.
     /// # Example
     /// ```
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_float(_: K) -> K{
@@ -169,8 +169,8 @@ extern "C" {
     ///  Constructor of q char object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_char(_: K) -> K{
@@ -188,9 +188,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_symbol(_: K) -> K{
@@ -208,9 +208,9 @@ extern "C" {
 
     /// Constructor of q timestamp from elapsed time in nanoseconds since kdb+ epoch (`2000.01.01`) or timespan object from nanoseconds.
     /// ```no_run
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_timestamp(_: K) -> K{
@@ -237,8 +237,8 @@ extern "C" {
     /// Constructor of q date object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_date(_: K) -> K{
@@ -255,8 +255,8 @@ extern "C" {
 
     /// Constructor of q datetime object from the number of days since kdb+ epoch (`2000.01.01`).
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_datetime(_: K) -> K{
@@ -274,8 +274,8 @@ extern "C" {
     /// Constructor of q time object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_time(_: K) -> K{
@@ -304,9 +304,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_string(_: K) -> K{
@@ -324,9 +324,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_string2(_: K) -> K{
@@ -346,10 +346,10 @@ extern "C" {
     ///  lists as its elements.
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_table(_: K) -> K{
@@ -382,10 +382,10 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_table(_: K) -> K{
@@ -428,10 +428,10 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_table(_: K) -> K{
@@ -469,10 +469,10 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_dictionary() -> K{
@@ -498,8 +498,8 @@ extern "C" {
     /// Constructor of q error.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// pub extern "C" fn thai_kick(_: K) -> K{
     ///   unsafe{
@@ -522,9 +522,9 @@ extern "C" {
     /// Add a raw value to a q simple list and returns a pointer to the (potentially reallocated) `K` object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::*;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_simple_list(_: K) -> K{
@@ -543,8 +543,8 @@ extern "C" {
     /// Append a q list object to a q list.
     ///  Returns a pointer to the (potentially reallocated) `K` object.
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn concat_list(mut list1: K, list2: K) -> K{
@@ -574,9 +574,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_compound_list(_: K) -> K{
@@ -608,10 +608,10 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn create_symbol_list(_: K) -> K{
@@ -654,9 +654,9 @@ extern "C" {
     /// Capture (and reset) error string into usual error object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// extern "C" fn catchy(func: K, args: K) -> K{
     ///   unsafe{
@@ -689,10 +689,10 @@ extern "C" {
     ///  executes against the kdb+ process in which it is loaded.
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn dictionary_list_to_table() -> K{
@@ -731,8 +731,8 @@ extern "C" {
     /// - 3: unenumerate, compress, allow serialization of timespan and timestamp
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn conceal(object: K)->K{
@@ -751,8 +751,8 @@ extern "C" {
     /// Deserialize a bytes into q object.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn reveal(bytes: K)->K{
@@ -785,9 +785,9 @@ extern "C" {
 
     /// Register callback to the associated kdb+ socket.
     /// ```no_run
-    /// use kdbplus::qtype;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     /// use std::ffi::c_void;
     ///
     /// // Send asynchronous query to the q process which sent a query to the caller of this function.
@@ -858,8 +858,8 @@ extern "C" {
     ///  q side. See details on [the reference page](https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting).
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn idle_man(_: K)->K{
@@ -887,9 +887,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn pass_through_cave(pedestrian: K) -> K{
@@ -919,8 +919,8 @@ extern "C" {
     /// Apply a function to q list object `.[func; args]`.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn rust_parse(dollar: K, type_and_text: K) -> K{
@@ -945,9 +945,9 @@ extern "C" {
     /// # Example
     /// ```no_run
     /// #[macro_use]
-    /// extern crate kdbplus;
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// extern crate kxkdb;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// #[no_mangle]
     /// pub extern "C" fn parallel_sym_change(list: K) -> K{
@@ -994,8 +994,8 @@ extern "C" {
     /// Convert ymd to the number of days from `2000.01.01`.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// fn main(){
     ///
@@ -1009,8 +1009,8 @@ extern "C" {
     /// Convert days from `2000.01.01` to a number expressed as `yyyymmdd`.
     /// # Example
     /// ```no_run
-    /// use kdbplus::api::*;
-    /// use kdbplus::api::native::*;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
     ///
     /// fn main(){
     ///
