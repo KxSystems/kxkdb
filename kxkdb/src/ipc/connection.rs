@@ -37,7 +37,7 @@ pub mod qmsg_type {
     //!
     //! # Example
     //! ```no_run
-    //! use kdbplus::ipc::*;
+    //! use kxkdb::ipc::*;
     //!
     //! // Print `K` object.
     //! fn print(obj: &K) {
@@ -382,8 +382,8 @@ impl QStream {
     /// - `credential`: Credential in the form of `username:password` to connect to the target q process.
     /// # Example
     /// ```
-    /// use kdbplus::qattribute;
-    /// use kdbplus::ipc::*;
+    /// use kxkdb::qattribute;
+    /// use kxkdb::ipc::*;
     ///
     /// #[tokio::main(flavor = "multi_thread", worker_threads = 2)]
     /// async fn main() -> Result<()> {
@@ -469,7 +469,7 @@ impl QStream {
     /// - port: Listening port.
     /// # Example
     /// ```no_run
-    /// use kdbplus::ipc::*;
+    /// use kxkdb::ipc::*;
     ///  
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -506,7 +506,7 @@ impl QStream {
     /// q)neg[h] (`teddy; "bear")
     /// ```
     /// # Note
-    /// - TLS acceptor sets `.kdbplus.close_tls_connection_` on q clien via an asynchronous message. This function is necessary to close
+    /// - TLS acceptor sets `.kxkdb.close_tls_connection_` on q clien via an asynchronous message. This function is necessary to close
     ///  the socket from the server side without crashing server side application.
     /// - TLS acceptor and UDS acceptor use specific environmental variables to work. See the [Environmental Variable](../ipc/index.html#environmentl-variables) section for details.
     pub async fn accept(method: ConnectionMethod, host: &str, port: u16) -> Result<Self> {
@@ -560,9 +560,9 @@ impl QStream {
                     false,
                 );
                 // In order to close the connection from the server side, it needs to tell a client to close the connection.
-                // The `kdbplus_close_tls_connection_` will be called from the server at shutdown.
+                // The `kxkdb_close_tls_connection_` will be called from the server at shutdown.
                 qstream
-                    .send_async_message(&".kdbplus.close_tls_connection_:{[] hclose .z.w;}")
+                    .send_async_message(&".kxkdb.close_tls_connection_:{[] hclose .z.w;}")
                     .await?;
                 Ok(qstream)
             }
@@ -719,7 +719,7 @@ impl QStreamInner for TlsStream<TcpStream> {
         if is_listener {
             // Closing the handle from the server side by `self.get_mut().shutdown()` crashes due to 'assertion failed: !self.context.is_null()'.
             // No reason to compress.
-            self.send_async_message(&".kdbplus.close_tls_connection_[]", false)
+            self.send_async_message(&".kxkdb.close_tls_connection_[]", false)
                 .await
                 .into()
         } else {

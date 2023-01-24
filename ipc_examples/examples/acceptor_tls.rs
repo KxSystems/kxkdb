@@ -6,7 +6,7 @@
 //! - A file path to a credential file must be set on `KDBPLUS_ACCOUNT_FILE`. See the README or the module document for the detail of the file format.
 //! - A file path to pkcs12 file must be set on `KDBPLUS_TLS_KEY_FILE` and its password on `KDBPLUS_TLS_KEY_FILE_SECRET`.
 
-use kdbplus::ipc::*;
+use kxkdb::ipc::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {

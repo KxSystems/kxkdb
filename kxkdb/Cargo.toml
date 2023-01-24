@@ -1,11 +1,11 @@
 [package]
-name = "kdbplus"
-version = "0.3.8"
-authors = ["diamondrod"]
+name = "kxkdb"
+version = "0.0.0"
+authors = ["diamondrod", "awilson-kx"]
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/diamondrod/kdbplus"
-documentation = "https://docs.rs/kdbplus"
+repository = "https://github.com/KxSystems/kxkdb"
+documentation = "https://docs.rs/kxkdb"
 readme = "../README.md"
 description = """
 Dual q/kdb+ interface for API to build a shared library and an IPC client.
