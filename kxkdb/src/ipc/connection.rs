@@ -162,6 +162,17 @@ pub enum ConnectionMethod {
     UDS = 2,
 }
 
+//%% Auth %%//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv/
+
+/// Authorize client login.
+#[async_trait]
+pub trait Auth {
+    /// Check credential string and return Result indicating
+    /// - Ok if user is authorized to connect
+    /// - Err if user is not autorized to connect
+    async fn authorize(&mut self, credential: &str) -> Result<()>;
+}
+
 //%% Query %%//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv/
 
 /// Feature of query object.
@@ -510,6 +521,10 @@ impl QStream {
     ///  the socket from the server side without crashing server side application.
     /// - TLS acceptor and UDS acceptor use specific environmental variables to work. See the [Environmental Variable](../ipc/index.html#environmentl-variables) section for details.
     pub async fn accept(method: ConnectionMethod, host: &str, port: u16) -> Result<Self> {
+        let mut userpass = UserPass {};
+        Self::accept_auth(method, host, port, &mut userpass).await
+    }
+    pub async fn accept_auth(method: ConnectionMethod, host: &str, port: u16, auth: &mut dyn Auth) -> Result<Self> {
         match method {
             ConnectionMethod::TCP => {
                 // Bind to the endpoint.
@@ -517,7 +532,7 @@ impl QStream {
                 // Listen to the endpoint.
                 let (mut socket, ip_address) = listener.accept().await?;
                 // Read untill null bytes and send back capacity.
-                while let Err(_) = read_client_input(&mut socket).await {
+                while let Err(_) = read_client_input(&mut socket, auth).await {
                     // Continue to listen in case of error.
                     socket = listener.accept().await?.0;
                 }
@@ -544,7 +559,7 @@ impl QStream {
                     .await
                     .expect("failed to accept TLS connection");
                 // Read untill null bytes and send back a capacity.
-                while let Err(_) = read_client_input(&mut tls_socket).await {
+                while let Err(_) = read_client_input(&mut tls_socket, auth).await {
                     // Continue to listen in case of error.
                     socket = listener.accept().await?.0;
                     tls_socket = tls_acceptor
@@ -575,7 +590,7 @@ impl QStream {
                 // Listen to the endpoint
                 let (mut socket, _) = listener.accept().await?;
                 // Read untill null bytes and send back capacity.
-                while let Err(_) = read_client_input(&mut socket).await {
+                while let Err(_) = read_client_input(&mut socket, auth).await {
                     // Continue to listen in case of error.
                     socket = listener.accept().await?.0;
                 }
@@ -988,11 +1003,45 @@ async fn connect_uds(port: u16, credential: &str) -> Result<UnixStream> {
     Ok(socket)
 }
 
+//%% UserPass %%//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv/
+
+/// Default client authorization
+struct UserPass;
+
+#[async_trait]
+impl Auth for UserPass {
+    /// Split credential string on ':' and compare user/pass with credentials in file defined by
+    /// KDBPLUS_ACCOUNT_FILE envvar.
+    /// n.b. Password in file is SHA-1 hashed
+    /// Returns
+    /// - Ok if user is authorized to connect
+    /// - Err if user is not autorized to connect
+    async fn authorize(&mut self, credential: &str) -> Result<()> {
+        let userpass = credential.split(':').collect::<Vec<&str>>();
+        if userpass.len() > 1 {
+            if let Some(encoded) = ACCOUNTS.get(&userpass[0].to_string()) {
+                let mut hasher = Sha1::new();
+                hasher.update(userpass[1].as_bytes());
+                let encoded_password = hasher.digest().to_string();
+                if encoded == &encoded_password {
+                    return Ok(());
+                }
+            }
+        }
+        // Authentication failure.
+        Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "authentication failed",
+        )
+        .into())
+    }
+}
+
 //%% QStream Acceptor %%//vvvvvvvvvvvvvvvvvvvvvvvvvvv/
 
 /// Read username, password, capacity and null byte from q client at the connection and does authentication.
 ///  Close the handle if the authentication fails.
-async fn read_client_input<S>(socket: &mut S) -> Result<()>
+async fn read_client_input<S>(socket: &mut S, auth: &mut dyn Auth) -> Result<()>
 where
     S: Unpin + AsyncWriteExt + AsyncReadExt,
 {
@@ -1015,36 +1064,13 @@ where
                     let capacity = client_input[index];
                     passed_credential
                         .push_str(str::from_utf8(&client_input[0..index]).expect("invalid bytes"));
-                    let credential = passed_credential.as_str().split(':').collect::<Vec<&str>>();
-                    if let Some(encoded) = ACCOUNTS.get(&credential[0].to_string()) {
-                        // User exists
-                        let mut hasher = Sha1::new();
-                        hasher.update(credential[1].as_bytes());
-                        let encoded_password = hasher.digest().to_string();
-                        if encoded == &encoded_password {
-                            // Client passed correct credential
-                            socket.write_all(&[capacity; 1]).await?;
-                            return Ok(());
-                        } else {
-                            // Authentication failure.
-                            // Close connection.
-                            socket.shutdown().await?;
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidData,
-                                "authentication failed",
-                            )
-                            .into());
-                        }
+                    let credential_check = auth.authorize(&passed_credential).await;
+                    if credential_check.is_ok() {
+                        socket.write_all(&[capacity; 1]).await?;
                     } else {
-                        // Authentication failure.
-                        // Close connection.
                         socket.shutdown().await?;
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            "authentication failed",
-                        )
-                        .into());
                     }
+                    return credential_check;
                 } else {
                     // Append a fraction of credential
                     passed_credential
