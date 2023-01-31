@@ -567,12 +567,11 @@ impl QStream {
                 Ok(qstream)
             }
             ConnectionMethod::UDS => {
-                // uild a sockt file path.
-                let uds_path = create_sockfile_path(port)?;
-                let abstract_sockfile_ = format!("\x00{}", uds_path);
-                let abstract_sockfile = Path::new(&abstract_sockfile_);
+                // Build a socket file path
+                let sockfile_ = create_sockfile_path(port);
+                let sockfile  = Path::new(&sockfile_);
                 // Bind to the file
-                let listener = UnixListener::bind(&abstract_sockfile).unwrap();
+                let listener = UnixListener::bind(&sockfile).unwrap();
                 // Listen to the endpoint
                 let (mut socket, _) = listener.accept().await?;
                 // Read untill null bytes and send back capacity.
@@ -960,14 +959,17 @@ async fn connect_tls(host: &str, port: u16, credential: &str) -> Result<TlsStrea
 }
 
 /// Build a path of a socket file.
-fn create_sockfile_path(port: u16) -> Result<String> {
+fn create_sockfile_path(port: u16) -> String {
     // Create file path
-    let udspath = match env::var("QUDSPATH") {
+    let uds_path = match env::var("QUDSPATH") {
         Ok(dir) => format!("{}/kx.{}", dir, port),
         Err(_) => format!("/tmp/kx.{}", port),
     };
-
-    Ok(udspath)
+    #[cfg(target_os="linux")]
+    let sockfile_ = format!("\x00{}", uds_path); // abstract for Linux
+    #[cfg(not(target_os="linux"))]
+    let sockfile_ = format!("{}", uds_path); // non-abstract for non-Linux
+    sockfile_
 }
 
 /// Connect to q process running on the specified `port` via Unix domain socket with a credential `username:password`.
@@ -977,14 +979,12 @@ fn create_sockfile_path(port: u16) -> Result<String> {
 #[cfg(unix)]
 async fn connect_uds(port: u16, credential: &str) -> Result<UnixStream> {
     // Create a file path.
-    let uds_path = create_sockfile_path(port)?;
-    let abstract_sockfile_ = format!("\x00{}", uds_path);
-    let abstract_sockfile = Path::new(&abstract_sockfile_);
+    let sockfile_ = create_sockfile_path(port);
+    let sockfile  = Path::new(&sockfile_);
     // Connect to kdb+.
-    let mut socket = UnixStream::connect(&abstract_sockfile).await?;
+    let mut socket = UnixStream::connect(&sockfile).await?;
     // Handshake
     handshake(&mut socket, credential, "\x06\x00").await?;
-
     Ok(socket)
 }
 
