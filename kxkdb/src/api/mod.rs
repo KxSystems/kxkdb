@@ -184,7 +184,7 @@ use super::qtype;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::os::raw::{
-    c_char, c_double, c_float, c_int, c_longlong, c_schar, c_short, c_uchar, c_void,
+    c_char, c_double, c_float, c_int, c_longlong, c_schar, c_short, c_uchar, c_void, c_ulonglong,
 };
 use std::str;
 pub mod native;
@@ -269,6 +269,8 @@ pub type E = c_float;
 pub type F = c_double;
 /// `void` in C.
 pub type V = c_void;
+/// `u64` in C.
+pub type UJ = c_ulonglong;
 
 //%% U %%//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv/
 
@@ -2716,6 +2718,34 @@ pub fn ymd_to_days(year: I, month: I, date: I) -> I {
 #[inline]
 pub fn days_to_ymd(days: I) -> I {
     unsafe { native::dj(days) }
+}
+
+/// Index a K object, including compound lists or nested data
+/// # Example
+/// ```no_run
+/// use kxkdb::api::*;
+///
+/// #[no_mangle]
+/// pub extern "C" fn index_func(x: K, i: K) -> K {
+///     match i.get_long(){
+///         Ok(idx) => index(x, idx as UJ),
+///         Err(error) => new_error(error)
+///     }
+/// }
+/// ```
+/// ```q
+/// q)index_func: `libc_api_examples 2: (`index_func; 2);
+/// q)m:3 3#til 9
+/// q)index_func[;1]m
+/// 3 4 5
+/// q)index_func[;1]index_func[;1]m
+/// 4
+/// q)index_func[;1i]m
+/// 'type
+/// ```
+#[inline]
+pub fn index(qobject: K, index: UJ) -> K {
+    unsafe { native::vi(qobject, index) }
 }
 
 /// Convert a simple list to a compound list. Expected usage is to concatinate a simple list

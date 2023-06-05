@@ -9,7 +9,7 @@
 // >> Load Libraries
 //++++++++++++++++++++++++++++++++++++++++++++++++++//
 
-use super::{const_S, F, I, J, K, S, U, V};
+use super::{const_S, F, I, J, K, S, U, V, UJ};
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++//
 // >> External C Functions
@@ -1020,6 +1020,36 @@ extern "C" {
     /// }
     /// ```
     pub fn dj(days: I) -> I;
+
+    /// Index a K object, including compound lists or nested data
+    /// # Example
+    /// ```no_run
+    /// use kxkdb::qtype;
+    /// use kxkdb::api::*;
+    /// use kxkdb::api::native::*;
+    ///
+    /// #[no_mangle]
+    /// pub extern "C" fn index_func(x: K, i: K) -> K {
+    ///     unsafe {
+    ///         if (*i).qtype!=qtype::LONG_ATOM {
+    ///             krr(null_terminated_str_to_const_S(&"type\0"))
+    ///         } else {
+    ///             vi(x, (*i).value.long as UJ)
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    /// ```q
+    /// q)index_func: `libc_api_examples 2: (`index_func; 2);
+    /// q)m:3 3#til 9
+    /// q)index_func[;1]m
+    /// 3 4 5
+    /// q)index_func[;1]index_func[;1]m
+    /// 4
+    /// q)index_func[;1i]m
+    /// 'type
+    /// ```
+    pub fn vi(qobject: K, index: UJ) -> K;
 
     /* Unsupported
 
