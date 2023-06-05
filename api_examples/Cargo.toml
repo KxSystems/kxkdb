@@ -1,7 +1,7 @@
 [package]
 name = "api_examples"
-version = "0.0.0"
-authors = ["diamondrod"]
+version = "0.1.0"
+authors = ["diamondrod", "awilson-kx"]
 edition = "2021"
 description = """
 NOT A PACKAGE TO PUBLISH.
