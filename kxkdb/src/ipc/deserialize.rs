@@ -161,7 +161,25 @@ macro_rules! build_list {
 
 impl K {
     /// Deserialize bytes to q object in a manner of q function `-9!`.
-    pub(crate) async fn q_ipc_decode(bytes: &Vec<u8>, encode: u8) -> Self {
+    /// n.b. Bytes without the IPC message header (encoding, message type, compressed,
+    /// reserved null byte and total message length).
+    /// # Example
+    /// ```
+    /// use kxkdb::ipc::*;
+    /// use kxkdb::qattribute;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let x = K::new_long_list(vec![1,2,3,4,5], qattribute::SORTED);
+    ///     println!("x: {}", x);
+    ///     let y = x.q_ipc_encode();
+    ///     println!("y: {:?}", y);
+    ///     let z = K::q_ipc_decode(&y, 1_u8).await;
+    ///     println!("z: {}", z);
+    ///     Ok(())
+    /// }
+    /// ```
+    pub async fn q_ipc_decode(bytes: &Vec<u8>, encode: u8) -> Self {
         deserialize_bytes(bytes, 0, encode).await.0
     }
 }
