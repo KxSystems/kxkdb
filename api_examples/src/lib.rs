@@ -403,6 +403,15 @@ pub extern "C" fn decrypt(bytes: K) -> K {
     }
 }
 
+/// Example of `index`.
+#[no_mangle]
+pub extern "C" fn indexing(x: K, i: K) -> K {
+    match i.get_long(){
+        Ok(idx) => index(x, idx as UJ),
+        Err(error) => new_error(error)
+    }
+}
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 //                            Constructors                              //
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -654,6 +663,18 @@ pub extern "C" fn catchy(func: K, args: K) -> K {
             KNULL
         } else {
             result
+        }
+    }
+}
+
+/// Example of `vi`.
+#[no_mangle]
+pub extern "C" fn vi_index(x: K, i: K) -> K {
+    unsafe {
+        if (*i).qtype!=qtype::LONG_ATOM {
+            krr(null_terminated_str_to_const_S(&"type\0"))
+        } else {
+            vi(x, (*i).value.long as UJ)
         }
     }
 }
