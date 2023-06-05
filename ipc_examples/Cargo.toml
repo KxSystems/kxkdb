@@ -15,4 +15,5 @@ This module provides examples of using `ipc` feature of `kxkdb` library. The fun
 [dev-dependencies]
 kxkdb={path="../kxkdb", features=["ipc"]}
 chrono="0.4"
+async-trait="0.1"
 tokio={version="1.0", features=["net", "rt", "io-util", "fs", "macros", "rt-multi-thread"]}
