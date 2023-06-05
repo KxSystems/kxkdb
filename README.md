@@ -389,8 +389,8 @@ kxkdb]$ cargo test
 Tests are conducted with `tests/test.q` by loading the example functions built in `api_examples`.
 
 ```bash
-kxkdb]$ cargo build
-kxkdb]$ cp target/debug/libapi_examples.so tests/
+kxkdb]$ cargo build --release
+kxkdb]$ cp target/release/libapi_examples.so tests/
 kxkdb]$ cd tests
 tests]$ q test.q
 Initialized something, probably it is your mindset.
